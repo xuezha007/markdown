@@ -1,7 +1,6 @@
 <center>springboot  约定大于配置</center>
 
 
-
 [TOC]
 
 ## 小点
@@ -80,6 +79,9 @@
 #### lommock 
 
 - entity 实体类自动生成getter和setter
+- @Data 自动创建 getter 和 setter
+- @AllArgsConstructor   必须还要有无参构造器
+- @NoArgsConstructor 
 
 #### Thymeleaf
 
@@ -176,8 +178,21 @@
 #### Thymeleaf模板位置修改
 
 - 默认放在template文件下
-
 - 配置文件 spring.thymeleaf.prefix=classpath....
+
+#### 循环
+
+- th:each="s:${students}"
+
+#### 在js中取值
+
+- var id=[[${student.id}]]
+
+#### Thymeleaf占位符配置
+
+- 配置文件 a=sjkj{0}dfjh{1}
+
+- <div th:text="#{a('dfd','fdfd')}"
 
 #### 语法
 
