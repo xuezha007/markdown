@@ -1,9 +1,191 @@
 <center>springboot  约定大于配置</center>
-
-
 [TOC]
 
+# restful风格
+
+- 传统类型：http://localhost:8080/hello/index?name=zhangsan&id=10
+
+- REST：http://localhost:8080/hello/index/zhangsan/10 
+
+    ```java
+    @RequestMapping("/rest/{name}/{id}")
+    public String rest(@PathVariable("name") String name,@PathVariable("id") int id){
+    }
+    ```
+
+    
+
+# spring mvc
+
+## mvc
+
+- model 数据层
+- view
+- controller
+
+## 调用过程
+
+```mermaid
+graph LR
+a(客户端)-->b(1.DistacherServlet)
+b-->c(2.handlerMapping)
+c--返回hanler和handlerinterceptor-->b
+b-->h(handleradapter)
+h--返回modelandview-->b
+h-->d(3.handler和 HandleInterceptor)
+d--返回modelANDview-->h
+b-->e(4.viewReslover)
+e--返回view-->b
+b-->a
+
+
+```
+
+
+
+## web.xml配置
+
+- 创建dispatchersevlet
+
+    ```xml
+    
+      <servlet>
+        <servlet-name>dispatcherServlet</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+          <param-name>contextConfigLocation</param-name>
+          <param-value>classpath:springmvc.xml</param-value>
+        </init-param>
+      </servlet>
+      
+      <servlet-mapping>
+        <servlet-name>dispatcherServlet</servlet-name>
+        <url-pattern>/</url-pattern>
+      </servlet-mapping>
+      
+    ```
+
+- 自动扫描包下的注解
+
+```xml
+ <context:component-scan base-package="com.southwind"></context:component-scan>
+
+```
+
+- 创建 视图解析器 当返回时自动添加前缀后缀
+
+```xml
+   <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+```
+
+## 常见注解
+
+#### @Requestmapping
+
+- 参数 params：指定请求中必须包含某些参数，否则无法调用该方法。
+
+    ```java
+    @RequestMapping(value = "/index",method = RequestMethod.GET,params = {"name","id=10"})
+    
+    ```
+
+#####  转发与重定向
+
+```java
+@RequestMapping("/forward")
+public String forward(){
+    return "forward:/index.jsp";
+    //        return "index";
+}
+@RequestMapping("/redirect")
+public String redirect(){
+    return "redirect:/index.jsp";
+}
+
+```
+
+
+
+#### @RequestParam:
+
+- 当controller 方法参数与http请求参数不一致  用来映射   
+
+```java
+public String index(@RequestParam("name") String str,@RequestParam("id") int age)
+```
+
+
+
+#### @CookieValue
+
+- 获取cookie某一属性的值
+
+######              
+
+
+
+## 绑定参数
+
+#### javabean自动绑定参数
+
+- 当控制器的参数是一个类时且form表单的value为类中属性名字一模一样 会自动倒入类中
+
+    ```java
+    public class User {
+        private long id;
+        private String name;
+        private Address address;
+    }
+    public class Address {
+        private String value;
+    }
+    <form action="/hello/save" method="post">
+            用户id：<input type="text" name="id"/><br/>
+            用户名：<input type="text" name="name"/><br/>
+            用户地址：<input type="text" name="address.value"/><br/>
+            <input type="submit" value="注册"/>
+        </form>
+     @RequestMapping(value = "/save",method = RequestMethod.POST)
+    public String save(User user){
+        System.out.println(user);
+        return "index";
+    }
+    ```
+
+    
+
+## 中文乱码
+
+#### javabean绑定时控制器输出中文乱码
+
+```xml
+<filter>
+    <filter-name>encodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>UTF-8</param-value>
+    </init-param>
+</filter>
+
+<filter-mapping>
+    <filter-name>encodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+```
+
+
+
+# spring boot
+
 ## 小点
+
+#### spring.boot.view 
+
+- 只有jsp文件才用
 
 ####  yml与properties
 
@@ -246,6 +428,15 @@
         }
     }
     ```
+
+
+## 一些对比
+
+#### 接收时间数据双向
+
+- mvc.date-format  当前端提交字符串日期进行格式转化
+
+- jackson.date-format 当后端转化json串到前端时对日期进行格式化
 
     
 
