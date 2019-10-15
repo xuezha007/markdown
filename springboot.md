@@ -107,8 +107,6 @@ public String redirect(){
 
 ```
 
-
-
 #### @RequestParam:
 
 - 当controller 方法参数与http请求参数不一致  用来映射   
@@ -117,7 +115,13 @@ public String redirect(){
 public String index(@RequestParam("name") String str,@RequestParam("id") int age)
 ```
 
+```java
+value = "num"：将 HTTP 请求中名为 num 的参数赋给形参 id。
 
+requried：设置 num 是否为必填项，true 表示必填，false 表示非必填，可省略。
+
+defaultValue = “0”：如果 HTTP 请求中没有 num 参数，默认值为0.
+```
 
 #### @CookieValue
 
@@ -125,7 +129,9 @@ public String index(@RequestParam("name") String str,@RequestParam("id") int age
 
 ######              
 
+#### @RestController
 
+- 表示该控制器会直接将业务方法的返回值响应给客户端，不进行视图解析。
 
 ## 绑定参数
 
@@ -155,7 +161,56 @@ public String index(@RequestParam("name") String str,@RequestParam("id") int age
     }
     ```
 
-    
+#### 参数包装类--控制器方法 可以值null 否则 基本数据类型会抛出异常
+
+#### 参数数组或Map
+
+```xml
+<form action="/data/list" method="post">
+        用户1编号：<input type="text" name="users[0].id"/><br/>
+        用户1名称：<input type="text" name="users[0].name"/><br/>
+        用户2编号：<input type="text" name="users[1].id"/><br/>
+        用户2名称：<input type="text" name="users[1].name"/><br/>
+        用户3编号：<input type="text" name="users[2].id"/><br/>
+        用户3名称：<input type="text" name="users[2].name"/><br/>
+        <input type="submit" value="提交"/>
+    </form>
+<form action="/data/map" method="post">
+        用户1编号：<input type="text" name="users['a'].id"/><br/>
+        用户1名称：<input type="text" name="users['a'].name"/><br/>
+        用户2编号：<input type="text" name="users['b'].id"/><br/>
+        用户2名称：<input type="text" name="users['b'].name"/><br/>
+        用户3编号：<input type="text" name="users['c'].id"/><br/>
+        用户3名称：<input type="text" name="users['c'].name"/><br/>
+        <input type="submit" value="提交"/>
+    </form>
+```
+
+```java
+@Data
+public class UserList {
+    private List<User> users;
+}
+@RequestMapping("/list")
+public String list(UserList userList){
+    StringBuffer str = new StringBuffer();
+    for(User user:userList.getUsers()){
+        str.append(user);
+    }
+    return str.toString();
+}
+@RequestMapping("/map")
+public String map(UserMap userMap){
+    StringBuffer str = new StringBuffer();
+    for(String key:userMap.getUsers().keySet()){
+        User user = userMap.getUsers().get(key);
+        str.append(user);
+    }
+    return str.toString();
+}
+```
+
+
 
 ## 中文乱码
 
@@ -175,6 +230,21 @@ public String index(@RequestParam("name") String str,@RequestParam("id") int age
     <filter-name>encodingFilter</filter-name>
     <url-pattern>/*</url-pattern>
 </filter-mapping>
+```
+
+#### @ResponseBody 中文乱码
+
+spring-mvc.xml
+
+```
+<mvc:annotation-driven>
+    <!-- 消息转换器 -->
+    <mvc:message-converters register-defaults="true">
+        <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+            <property name="supportedMediaTypes" value="text/html;charset=UTF-8"></property>
+        </bean>
+    </mvc:message-converters>
+</mvc:annotation-driven>
 ```
 
 
