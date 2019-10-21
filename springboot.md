@@ -9,7 +9,7 @@
 
     ```java
     @RequestMapping("/rest/{name}/{id}")
-    public String rest(@PathVariable("name") String name,@PathVariable("id") int id){
+    public String rest(@PathVariable("name") String name,@PathVariable("id")                                                        int id){
     }
     ```
 
@@ -133,9 +133,140 @@ defaultValue = “0”：如果 HTTP 请求中没有 num 参数，默认值为0.
 
 - 表示该控制器会直接将业务方法的返回值响应给客户端，不进行视图解析。
 
-## 绑定参数
+## 各种域添加
 
-#### javabean自动绑定参数
+#### Map
+
+- 隐含的数据数据存储容器直接使用即可 框架自动
+
+#### Model
+
+- 与map相同
+
+#### modelAndView
+
+- 包含业务数据与视图信息
+
+- 处理业务数据，业务方法的返回值必须是 ModelAndView 对象
+
+-   modelAndView.addObject("user", user);
+
+- modelAndView.setViewName("index");或
+
+    ```java
+     View view = new InternalResourceView("/index.jsp") modelAndView.setView(view);
+    ```
+
+```
+  ModelAndView modelAndView = new ModelAndView("index");
+```
+
+```
+View view = new InternalResourceView("/index.jsp");
+    ModelAndView modelAndView = new ModelAndView(view);
+```
+
+- ```java
+     User user = new User();
+    ModelAndView modelAndView = new ModelAndView("index", map);
+     return modelAndView;
+    ```
+
+    ```java
+    View view = new InternalResourceView("/index.jsp");
+        ModelAndView modelAndView = new ModelAndView(view, map);
+    ```
+
+    ```java
+     User user = new User();
+     ModelAndView modelAndView = new ModelAndView("index", "user", user);
+     或
+     View view = new InternalResourceView("/index.jsp");
+        ModelAndView modelAndView = new ModelAndView(view, "user", user);
+    ```
+
+    
+
+#### @SessionAttributes
+
+#### @ModelAttribute
+
+#### 业务数据绑定到 session 域对象
+
+- ```
+    将业务数据绑定到 request 对象中的同时，也会将业务数据绑定到 session 对象中，也就是说
+    request 和 session 对象会同时存在业务数据
+    ```
+
+    ```java
+    @Controller
+    @SessionAttributes(value="user")
+    public class HelloHandler {
+    //省略代码
+    }
+    @Controller
+    @SessionAttributes(value={"user","address"})
+    public class HelloHandler {
+    //省略代码
+    }
+    ```
+
+    
+
+## 绑定参数-控制器方法参数
+
+#### 数据类型转换
+
+-  HTTP 表单中的所有请求参数都是 String 类型的，如果业务方法的参数是 String 或者 int 类型，HandlerAdapter 可以自动完成数据转换，但如果参数是其他数据类型，比如 Date 类型，HandlerAdapter 是无法将 String 类型自动转为 Date 类型的，此时需要实现 Converter 接口来辅助 Spring MVC 完成数据类型的转换。
+
+    - ​	1创建 DateConverter实现org.springframework.core.convert.converter.Converter
+        接口，就成为了一个自定义数据类型转换器，同时其泛型为 `<String,Date>`是将 String 类型的数值转换为 Date
+
+    ```java
+    public class DateConverter implements Converter<String,Date>{
+    private String pattern;
+    public DateConverter(String pattern){
+            this.pattern = pattern;
+        }
+     public Date convert(String source) {
+            // TODO Auto-generated method stub
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+            try {
+                return simpleDateFormat.parse(source);
+            } catch (ParseException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+    ```
+
+    - ​	2
+
+    ```xml
+    <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+      <property name="converters">
+        <list>
+          <bean class="com.southwind.utils.DateConverter">
+            <!-- 调用有参构造函数创建 bean -->
+            <constructor-arg type="java.lang.String" value="yyyy-MM-dd"/>
+          </bean>
+              <bean class="com.southwind.utils.StudentConverter"></bean>
+        </list>
+      </property>
+    </bean>
+    
+    <mvc:annotation-driven conversion-service="conversionService"/>
+    ```
+
+    
+
+#### 基本数据类型
+
+- 请求参数名必须与形参名一致
+
+#### POJO
 
 - 当控制器的参数是一个类时且form表单的value为类中属性名字一模一样 会自动倒入类中
 
@@ -161,9 +292,21 @@ defaultValue = “0”：如果 HTTP 请求中没有 num 参数，默认值为0.
     }
     ```
 
-#### 参数包装类--控制器方法 可以值null 否则 基本数据类型会抛出异常
+#### json和javabean转换
 
-#### 参数数组或Map
+- ```xml
+    <dependency>
+        <groupId>com.alibaba</groupId>
+        <artifactId>fastjson</artifactId>
+        <version>1.2.32</version>
+    </dependency>
+    ```
+
+    
+
+#### 包装类--控制器方法 可以值null 否则 基本数据类型会抛出异常
+
+#### 数组或Map
 
 ```xml
 <form action="/data/list" method="post">
@@ -207,6 +350,38 @@ public String map(UserMap userMap){
         str.append(user);
     }
     return str.toString();
+}
+```
+
+#### json数据-不在拦截静态资源
+
+```xml
+<servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>*.js</url-pattern>
+</servlet-mapping>
+```
+
+```xml
+$.ajax({
+               url:"/data/json",
+               data:JSON.stringify(user),
+               type:"POST",
+               contentType:"application/json;charset=UTF-8",
+               dataType:"JSON",
+               success:function(data){
+                   alter(data.id+"---"+data.name);
+               }
+           })
+```
+
+```java
+@RequestMapping("/json")
+public User json(@RequestBody User user){
+    System.out.println(user);
+    user.setId(6);
+    user.setName("张六");
+    return user;
 }
 ```
 
