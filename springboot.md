@@ -692,6 +692,15 @@ spring-mvc.xml
 - 相当于一个xml文件
 - 等价创建了一个xml文件
 
+####  @Component  
+
+-  是一个泛化的概念，仅仅表示一个组件 (Bean) ，可以作用在任何层次。 
+
+#### @ContextConfiguration
+
+-   加载配置文件 
+- @ContextConfiguration(classes = {TestConfig.class})
+
 #### @Bean
 
 - xml 里一个bean
