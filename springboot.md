@@ -426,6 +426,26 @@ spring-mvc.xml
 
 # spring boot
 
+#### cookie值获取
+
+```java
+  public static String getValue(HttpServletRequest request, String name) {
+        if (request == null || name == null) {
+            throw new IllegalArgumentException("参数为空!");
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(name)) {
+                    return cookie.getValue();
+                }
+            }
+        }
+```
+
+
+
 ## 小点
 
 #### spring.boot.view 
@@ -444,6 +464,46 @@ spring-mvc.xml
 #### webjar
 
 - 把cas jqury 打包到maven
+
+## 拦截器 
+
+- 定义好拦截器
+
+```java
+@Component
+public class AlphaInterceptor implements HandlerInterceptor {
+
+    // 在Controller之前执行
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        logger.debug("preHandle: " + handler.toString());
+        return true;
+    }
+
+    // 在Controller之后执行
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        logger.debug("postHandle: " + handler.toString());
+    }
+
+    // 在TemplateEngine之后执行
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        logger.debug("afterCompletion: " + handler.toString());
+    }
+}
+
+```
+
+- webconfig注册
+
+    -  addInterceptors(InterceptorRegistry registry) 方法
+
+    - ```
+        registry.addInterceptor(alphaInterceptor). 添加注册拦截器
+        excludePathPatterns("/**/*.css","/**/*.jpg", "/**/*.jpeg")   排除路径
+        .addPathPatterns("/register", "/login");  添加路径
+        ```
 
 ## 默认值
 
@@ -548,6 +608,10 @@ spring-mvc.xml
 
 -   sprng-boot-starter-aop
 
+- jdk动态代理 cglib区别
+
+    - 前者必须要有接口
+
 - ```java
     @Aspect
     @Component
@@ -596,11 +660,28 @@ spring-mvc.xml
 
 ## thymeleaf
 
+#### 错误信息处理
+
+```html
+<div class="col-sm-10">
+<input type="text" name="username"  th:class="|form-control ${usernameMsg!=null?'is-invalid':''}|"   id="username" placeholder="请输入您的账号!" required>
+<div class="invalid-feedback">
+								该账号不存在!
+</div>
+</div>
+```
+
+is-invalid  是让下面的div出现 不是传过来的msg信息
+
 #### 引入
 
 - <html xmlns:th="http://www.thymeleaf.org">
 
     
+
+#### request 值获取-重定向才能获取request
+
+${param.name}
 
 #### Thymeleaf模板位置修改
 
@@ -620,6 +701,83 @@ spring-mvc.xml
 - 配置文件 a=sjkj{0}dfjh{1}
 
 - <div th:text="#{a('dfd','fdfd')}"
+
+#### 具体语法
+
+- 赋值，拼接
+
+    ```
+    <p th:text="${name}"></p>
+    <p th:text="'学生姓名是'+${name}+2"></p>
+    <p th:text="|学生姓名是,${name}|"></p>
+    ```
+
+- 条件判断
+
+    th:if 表示条件成立时显示内容，th:unless 表示条件不成立时显示内容
+
+    ```
+    <p th:if="${flag == true}" th:text="if判断成立"></p>
+    <p th:unless="${flag != true}" th:text="unless判断成立"></p>
+    ```
+
+- 循环
+
+    ```
+    <tr th:each="student,stat:${list}" th:style="'background-color:'+@{${stat.odd}?'#F2F2F2'}">
+        <td th:text="${stat.index}"></td>
+        <td th:text="${stat.count}"></td>
+        <td th:text="${student.id}"></td>
+        <td th:text="${student.name}"></td>
+        <td th:text="${student.age}"></td>
+      </tr>
+    </table>
+    ```
+
+    stat 是状态变量，属性：
+
+    - index 集合中元素的index（从0开始）
+    - count 集合中元素的count（从1开始）
+    - size 集合的大小
+    - current 当前迭代变量
+    - even/odd 当前迭代是否为偶数/奇数（从0开始计算）
+    - first 当前迭代的元素是否是第一个
+    - last 当前迭代的元素是否是最后一个
+
+- URL
+
+Thymeleaf 对于 URL 的处理是通过 `@{...}` 进行处理，结合 th:href 、th:src     th:href 传的是requestmapping 里的链接
+
+```html
+<h1>Hello World</h1>
+<a th:href="@{http://www.baidu.com}">跳转</a>
+<a th:href="@{http://localhost:9090/index/url/{na}(na=${name})}">跳转2</a>
+<img th:src="${src}">
+<div th:style="'background:url('+ @{${src}} +');'">
+<br/>
+<br/>
+<br/>
+</div>
+```
+
+- 三元运算
+
+##### 不同文件使用同样的一段代码
+
+- 基本代码 
+
+    ```
+    th:fragment="header"
+    ```
+
+- 拷贝的那个
+
+    ```
+     th:replace="index::header"
+     index 是基本代码的文件名 
+    ```
+
+    
 
 #### 语法
 
@@ -701,6 +859,10 @@ spring-mvc.xml
 -   加载配置文件 
 - @ContextConfiguration(classes = {TestConfig.class})
 
+####  @RestController 
+
+ @RestController注解相当于@ResponseBody ＋ @Controller合在一起的作用。 
+
 #### @Bean
 
 - xml 里一个bean
@@ -772,11 +934,32 @@ spring-mvc.xml
 
 - 主动去配置文件把值复制给类的属性
 - 在每个属性上方家＠Value("${student.id}")
-- 
 
 
 
- 
+## 日志
+
+#### spring-boot日志设置
+
+- 如果logback-spring.xml在resource下，spring会自动发现并启用
+
+
+
+#### 事务
+
+```
+@Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+```
+
+1.   REQUIRED: 支持当前事务(外部事务),如果不存在则创建新事务
+2. REQUIRES_NEW: 创建一个新事务,并且暂停当前事务(外部事务).
+3. ESTED: 如果当前存在事务(外部事务),则嵌套在该事务中执行(独立的提交和回滚),否则就会REQUIRED一样.
+
+
+
+#### 统一异常处理
+
+如果你定义了404.html诸如此类的页面，当出现了404错误 会自动跳转 你无须配置任何东西
 
 
 
