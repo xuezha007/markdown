@@ -671,7 +671,30 @@ public class AlphaInterceptor implements HandlerInterceptor {
 </div>
 ```
 
-is-invalid  是让下面的div出现 不是传过来的msg信息
+is-invalid  是让下面的div出现 也就是子集标签 不是传过来的msg信息
+
+##### disabled
+
+-  当是第一页时   不让第一页这个按钮能点
+
+- ```
+    <li th:class="|page-item ${page.current==1?'disabled':''}|">
+    
+    ```
+
+符合判断就加上 不符合就不加
+
+
+
+#### 点亮与不点亮
+
+- 当前页  要强调   
+
+- ```
+    <li th:class="|page-item ${i==page.current?'active':''}|" 
+    ```
+
+
 
 #### 引入
 
@@ -764,20 +787,24 @@ Thymeleaf 对于 URL 的处理是通过 `@{...}` 进行处理，结合 th:href �
 
 ##### 不同文件使用同样的一段代码
 
-- 基本代码 
+基本代码 
 
-    ```
-    th:fragment="header"
-    ```
+```
+th:fragment="header"
+```
 
-- 拷贝的那个
+拷贝的那个
 
-    ```
-     th:replace="index::header"
-     index 是基本代码的文件名 
-    ```
+```
+ th:replace="index::header"
+ index 是基本代码的文件名 
+```
 
-    
+
+
+
+
+- ######  th:utext会解析html，在页面中显示相应的样式 
 
 #### 语法
 
@@ -790,7 +817,7 @@ Thymeleaf 对于 URL 的处理是通过 `@{...}` 进行处理，结合 th:href �
 <a href="user/query.action">       用于不可直接访问的资源的跳转
 3，文本处理
 　　1、字符串并置：+
-　　2、文字替换：|The name is ${name}|
+　　2、既含有静态字符串又含有动态字符串：|The name is ${name}|
 4，表达式基本对象
 　　1、#ctx：上下文对象
 　　2、#vars：上下文变量
